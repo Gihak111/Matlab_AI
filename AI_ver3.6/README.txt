@@ -1,0 +1,1 @@
+ predictAndUpdateState함수를 predict(dlnetwork)로 변경

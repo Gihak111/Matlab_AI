@@ -1,0 +1,1 @@
+tranNetworks 에서 trannet으로 함수를 변경, predict함수를 predictAndUpdateState로 변경

@@ -1,0 +1,71 @@
+classdef wordEmbeddingLayer < nnet.layer.Layer
+    properties
+        EmbeddingMatrix
+        WordIndexMap
+        EmbeddingDim
+        Tokenizer % 토크나이저 추가
+    end
+    
+    methods
+        function obj = wordEmbeddingLayer(embeddingDim, numWords)
+            obj.EmbeddingDim = embeddingDim;
+            obj.EmbeddingMatrix = dlarray(randn(embeddingDim, numWords, 'single'));
+            obj.WordIndexMap = containers.Map('KeyType', 'char', 'ValueType', 'int32');
+            obj.Tokenizer = []; % 토크나이저 초기화
+        end
+        
+        function Z = predict(obj, X)
+            % X는 셀 배열 또는 토큰화된 데이터일 수 있습니다.
+            disp('Value of X in predict function:');
+            disp(X);
+
+            % 전처리된 데이터의 크기 확인
+            numSequences = numel(X); % 각 요소의 개수 반환
+
+            % 결과를 저장할 Z 초기화
+            Z = zeros(obj.EmbeddingDim, numSequences, 'like', obj.EmbeddingMatrix);
+
+            % 각 시퀀스에 대해 embed 함수를 적용하여 Z에 더하기
+            for i = 1:numSequences
+                if iscell(X) % X가 셀 배열인 경우에만 토크나이즈
+                    words = obj.tokenize(X{i});
+                else
+                    words = X(:, i); % 그 외의 경우는 X를 그대로 사용
+                end
+                for j = 1:length(words)
+                    Z(:, i) = Z(:, i) + obj.embed(words{j});
+                end
+            end
+
+            % dlarray로 변환하여 반환
+            Z = dlarray(Z);
+        end
+
+        function words = tokenize(obj, text)
+            % 토크나이즈 함수: 토크나이저가 없다면 새로 생성
+            if isempty(obj.Tokenizer)
+                obj.Tokenizer = tokenizedDocument(text);
+            else
+                obj.Tokenizer.TextData = text;
+            end
+            words = string(obj.Tokenizer.TokenList);
+        end
+
+        function emb = embed(obj, word)
+            % Get word index or assign new index
+            if isKey(obj.WordIndexMap, word)
+                idx = obj.WordIndexMap(word);
+            else
+                idx = length(obj.WordIndexMap) + 1;
+                obj.WordIndexMap(word) = idx;
+            end
+            
+            % Return embedding vector
+            emb = obj.EmbeddingMatrix(:, idx);
+        end
+        
+        function outputSize = getOutputSize(~)
+            outputSize = [128 1]; % 고정된 출력 크기
+        end
+    end
+end

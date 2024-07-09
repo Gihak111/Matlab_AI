@@ -1,0 +1,1 @@
+중간에 X 의 값을string cell 로 했으나 중괄호 인덱싱에서 막힘. 이 문제점을 중간에 wordEmbeddingLayer의 predict안에서 토큰화 하는것을 시도. 하지만 실패
